@@ -82,7 +82,7 @@ function home() {
   <section class="sec"><div class="wrap"><div class="sec-h"><h2>${T("Категории")}</h2></div><div class="cats" data-n="${catList().length}">${catList().map(([k, v]) => catTile(k, v)).join("")}</div></div></section>
   ${sec(T("Популярные товары"), pop, "#/catalog", 8)}
   ${nw.length || sale.length ? `<section class="sec"><div class="wrap promo">${nw.length ? tile("n", T("Новые поступления"), T("Свежие товары в каталоге."), "#/catalog?flag=new", imgSrc(nw[0], 0)) : ""}${sale.length ? tile("s", T("Акции"), T("Товары со сниженной ценой."), "#/catalog?flag=sale", imgSrc(sale[0], 0)) : ""}</div></section>` : ""}
-  ${svc.length ? `<section class="sec"><div class="wrap"><div class="svcband"><div class="sec-h" style="margin:0"><h2>${T("Сервис и услуги")}</h2><a class="btn ln sm" href="#/services">${T("Подробнее")}</a></div>${servicesHtml()}<div class="cta" style="margin-top:28px"><a class="btn pri" href="#/repair">${T("Оставить заявку на ремонт")}</a></div></div></div></section>` : ""}
+  ${svc.length ? `<section class="sec"><div class="wrap"><div class="svcband"><div class="sec-h" style="margin:0"><h2>${T("Сервис и услуги")}</h2><a class="btn ln sm" href="#/services">${T("Подробнее")}</a></div>${servicesHtml()}<div class="cta" style="margin-top:28px"><a class="btn pri" href="#/repair">${T("Оставить заявку на услугу")}</a></div></div></div></section>` : ""}
   <div class="wrap"><div class="final"><h2>${T("Ищете что-то конкретное?")}</h2><p>${T("Свяжитесь с нами — поможем узнать наличие и подобрать подходящий товар.")}</p>${waBtn(T("Написать в WhatsApp"))}</div></div>`;
 }
 
@@ -167,19 +167,19 @@ function services() {
   const svc = activeServices();
   return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${T("О магазине" + (svc.length ? " и услуги" : ""))}</h1>
   <p class="mu" style="max-width:36em;font-size:1.15rem;margin:16px 0 0">${T("Sotovik Zaisan — магазин электроники в Зайсане. Продаём аксессуары и технику (почти всё, кроме чехлов).")}</p>
-  ${svc.length ? `<div class="sec" style="padding-top:40px"><div class="svcband">${servicesHtml()}<div class="cta" style="margin-top:28px"><a class="btn pri" href="#/repair">${T("Оставить заявку на ремонт")}</a></div></div></div>` : ""}
+  ${svc.length ? `<div class="sec" style="padding-top:40px"><div class="svcband">${servicesHtml()}<div class="cta" style="margin-top:28px"><a class="btn pri" href="#/repair">${T("Оставить заявку на услугу")}</a></div></div></div>` : ""}
   <div class="final"><h2>${T("Нужна консультация?")}</h2><p>${T("Опишите модель и задачу — подскажем по срокам и стоимости. Цены уточняйте у магазина.")}</p>${waBtn(T("Написать в WhatsApp"), "btn pri", T("Здравствуйте! Хочу узнать про услугу или товар."))}</div></div>`;
 }
 
 function repair() {
-  setMeta(T("Заявка на ремонт — Sotovik Zaisan"), T("Опишите, что случилось с устройством. Откроется WhatsApp с готовым сообщением — останется нажать «Отправить», и мы ответим по срокам и стоимости."));
+  setMeta(T("Заявка на услугу — Sotovik Zaisan"), T("Опишите, что случилось с устройством. Откроется WhatsApp с готовым сообщением — останется нажать «Отправить», и мы ответим по срокам и стоимости."));
   const devs = ["Смартфон", "Планшет", "Ноутбук", "Наушники / колонка", "Телевизор", "Другое"];
   setTimeout(() => {
     const f = $("#rf"); if (!f) return;
     f.onsubmit = e => {
       e.preventDefault();
       const v = id => f.elements[id].value.trim();
-      const lines = [T("Здравствуйте! Заявка на ремонт."), T("Устройство: ") + T(v("dev"))];
+      const lines = [T("Здравствуйте! Заявка на услугу."), T("Устройство: ") + T(v("dev"))];
       if (v("model")) lines.push(T("Модель: ") + v("model"));
       lines.push(T("Что случилось: ") + v("issue"));
       if (v("name")) lines.push(T("Имя: ") + v("name"));
@@ -188,7 +188,7 @@ function repair() {
       const w = window.open(url, "_blank"); if (w) w.opener = null; else location.href = url;
     };
   });
-  return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${T("Заявка на ремонт")}</h1>
+  return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${T("Заявка на услугу")}</h1>
   <p class="mu" style="max-width:36em;font-size:1.1rem;margin:16px 0 0">${T("Опишите, что случилось с устройством. Откроется WhatsApp с готовым сообщением — останется нажать «Отправить», и мы ответим по срокам и стоимости.")}</p>
   <form id="rf" class="rf">
     <label>${T("Тип устройства")}<select class="in" name="dev">${devs.map(d => `<option value="${esc(d)}">${esc(T(d))}</option>`).join("")}</select></label>
@@ -226,7 +226,7 @@ const fl = (icon, text, attrs, cls = "") => `<a class="fl ${cls}" ${attrs}><i>${
 const socIcon = n => /instagram/i.test(n) ? "ig" : /tiktok/i.test(n) ? "tt" : "tg";
 function footer() {
   $("#footer").innerHTML = `<div class="fg"><div><b>SOTOVIK ZAISAN</b><p style="margin-top:8px">${T("Магазин электроники и сервисный центр в Зайсане.")}</p></div>
-  <div><h3>${T("Разделы")}</h3><a href="#/catalog">${T("Каталог")}</a><a href="#/services">${T("О магазине")}</a>${activeServices().length ? `<a href="#/repair">${T("Заявка на ремонт")}</a>` : ""}<a href="#/contacts">${T("Контакты")}</a></div>
+  <div><h3>${T("Разделы")}</h3><a href="#/catalog">${T("Каталог")}</a><a href="#/services">${T("О магазине")}</a>${activeServices().length ? `<a href="#/repair">${T("Заявка на услугу")}</a>` : ""}<a href="#/contacts">${T("Контакты")}</a></div>
   <div><h3>${T("Категории")}</h3>${catList().slice(0, 6).map(([k, v]) => `<a href="#/catalog?cat=${k}">${v}</a>`).join("")}</div>
   <div class="fc"><h3>${T("Контакты")}</h3>${fl("phone", esc(C.phoneDisplay), `href="tel:${esc(C.phoneTel)}"`)}${fl("wa", "WhatsApp", "data-wa", "wa")}${socials().map(s => fl(socIcon(s[0]), s[0], `href="${esc(s[1])}" target="_blank" rel="noopener"`)).join("")}${fl("pin", esc(T(C.address)), `href="${mapUrl()}" target="_blank" rel="noopener"`)}<div class="fl-info"><i>${ficon("clock")}</i><span>${C.hours.map(h => h.map(x => T(x)).join(" ")).join(", ")}</span></div></div></div>
   <div class="copy">© ${new Date().getFullYear()} ${esc(C.name)}</div>`;
