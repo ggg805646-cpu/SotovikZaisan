@@ -12,25 +12,28 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<style>.lang{height:42px;min-width:52px;padding:0 12px;border-radius:99px;border:0;background:var(--soft,#f1f2f5);color:inherit;font:inherit;font-weight:700;font-size:.85rem;letter-spacing:.02em;cursor:pointer;align-self:center;margin-right:2px;transition:.2s}.lang:hover{background:#e3e6ec}.fg a.fl{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:0 0 8px;background:#fff;border:1px solid var(--ln);border-radius:14px;color:var(--tx);font-weight:500;transition:.2s}.fg a.fl:hover{border-color:var(--ac);transform:translateY(-1px)}.fg a.fl:active{transform:none;background:#f0f5ff}.fl i,.fl-info i{width:34px;height:34px;border-radius:50%;background:#eaf1ff;display:grid;place-items:center;flex:none}.fl i svg,.fl-info i svg{width:18px;height:18px;fill:none;stroke:var(--ac);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.fg a.fl.wa i{background:#e5f7ec}.fl.wa i svg{stroke:#1a9d56}.fl span{flex:1;min-width:0;overflow-wrap:anywhere}.fl b{color:var(--ac);font-size:1.4rem;line-height:1;font-weight:500}.fl-info{display:flex;align-items:center;gap:12px;padding:4px 12px;color:var(--mu)}.fl-info i{background:transparent;border:1px solid var(--ln)}.fl-info i svg{stroke:var(--mu)}</style>
 </head>
 <body>
-<a class="skip" href="#app">К содержимому</a>
+<a class="skip" href="#app" data-t="К содержимому">К содержимому</a>
 <header class="hdr" id="hdr">
   <div class="wrap hdr-in">
-    <a class="logo" href="#/" aria-label="Sotovik Zaisan — главная"><span class="mark" aria-hidden="true"></span><span>SOTOVIK ZAISAN</span></a>
-    <nav id="nav" aria-label="Основная навигация">
-      <a href="#/" data-r="home">Главная</a><a href="#/catalog" data-r="catalog">Каталог</a>
-      <a href="#/services" data-r="services">О магазине</a><a href="#/contacts" data-r="contacts">Контакты</a>
+    <a class="logo" href="#/" aria-label="Sotovik Zaisan — главная" data-ta="Sotovik Zaisan — главная"><span class="mark" aria-hidden="true"></span><span>SOTOVIK ZAISAN</span></a>
+    <nav id="nav" aria-label="Основная навигация" data-ta="Основная навигация">
+      <a href="#/" data-r="home" data-t="Главная">Главная</a><a href="#/catalog" data-r="catalog" data-t="Каталог">Каталог</a>
+      <a href="#/services" data-r="services" data-t="О магазине">О магазине</a><a href="#/contacts" data-r="contacts" data-t="Контакты">Контакты</a>
     </nav>
     <div class="hdr-act">
-      <a class="ib" href="#/catalog?focus=1" aria-label="Поиск по каталогу"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
-      <a class="ib wa" data-wa target="_blank" rel="noopener" aria-label="Написать в WhatsApp"><svg viewBox="0 0 24 24"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 19z"/></svg></a>
-      <button class="ib burger" id="burger" aria-label="Открыть меню" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <a class="ib" href="#/catalog?focus=1" aria-label="Поиск по каталогу" data-ta="Поиск по каталогу"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
+      <a class="ib wa" data-wa target="_blank" rel="noopener" aria-label="Написать в WhatsApp" data-ta="Написать в WhatsApp"><svg viewBox="0 0 24 24"><path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 19z"/></svg></a>
+      <button class="lang" id="lang" type="button" aria-label="Қазақ тілі">ҚАЗ</button>
+      <button class="ib burger" id="burger" aria-label="Открыть меню" data-ta="Открыть меню" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div>
 </header>
 <main id="app" tabindex="-1"></main>
 <footer class="ftr"><div class="wrap" id="footer"></div></footer>
+<script src="js/i18n.js"></script>
 <script src="js/config.js"></script>
 <script src="js/products.js"></script>
 <script src="js/supabase-config.js"></script>

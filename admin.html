@@ -32,6 +32,8 @@
           <label class="admin-field">Старая цена, ₸<input id="pOldPrice" type="number" min="0" step="1"></label>
           <label class="admin-field">Наличие<select id="pAvailability"><option value="in_stock">В наличии</option><option value="order">Под заказ</option><option value="out">Нет в наличии</option></select></label>
           <label class="admin-field full">Описание<textarea id="pDescription"></textarea></label>
+          <label class="admin-field">Название на казахском (необязательно)<input id="pNameKk" maxlength="200"></label>
+          <label class="admin-field full">Описание на казахском (необязательно)<textarea id="pDescriptionKk"></textarea></label>
           <label class="admin-field full">Фотографии товара<input id="pImages" type="file" accept="image/*" multiple><small class="admin-muted">Можно выбрать несколько фотографий. Они загрузятся в облачное хранилище.</small><div id="imagePreview" class="admin-muted"></div></label>
           <label class="admin-field full">Характеристики (каждая с новой строки: ключ: значение)<textarea id="pSpecs" placeholder="storage: 256 ГБ&#10;color: Чёрный&#10;condition: Б/у"></textarea></label>
         </div>
