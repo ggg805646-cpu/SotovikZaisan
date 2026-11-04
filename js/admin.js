@@ -30,7 +30,7 @@
   function specsText(obj) { return Object.entries(obj||{}).map(([k,v])=>`${k}: ${v}`).join('\n'); }
   function openForm(p=null) {
     editingId = p?.id || null; currentImages = [...(p?.images || [])]; $('formTitle').textContent = p ? 'Редактирование товара' : 'Новый товар';
-    $('pName').value=p?.name||''; $('pBrand').value=p?.brand||''; $('pCategory').value=p?.category||'other'; $('pPrice').value=p?.price??''; $('pOldPrice').value=p?.oldPrice??''; $('pAvailability').value=p?.availability||'in_stock'; $('pDescription').value=p?.description||''; $('pSpecs').value=specsText(p?.specifications); $('pFeatured').checked=!!p?.featured; $('pNew').checked=!!p?.isNew; $('pSale').checked=!!p?.isSale; $('pImages').value=''; showImages(); $('editPanel').classList.remove('admin-hidden'); $('editPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    $('pName').value=p?.name||''; $('pBrand').value=p?.brand||''; $('pCategory').value=p?.category||'other'; $('pPrice').value=p?.price??''; $('pOldPrice').value=p?.oldPrice??''; $('pAvailability').value=p?.availability||'in_stock'; $('pDescription').value=p?.description||''; $('pNameKk').value=p?.name_kk||''; $('pDescriptionKk').value=p?.description_kk||''; $('pSpecs').value=specsText(p?.specifications); $('pFeatured').checked=!!p?.featured; $('pNew').checked=!!p?.isNew; $('pSale').checked=!!p?.isSale; $('pImages').value=''; showImages(); $('editPanel').classList.remove('admin-hidden'); $('editPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }
   function showImages(){ $('imagePreview').textContent = currentImages.length ? `Текущие фото: ${currentImages.length}\n${currentImages.join('\n')}` : 'Фотографии пока не добавлены.'; }
   async function uploadImages(files, id) {
@@ -59,7 +59,8 @@
     try {
       const name=$('pName').value.trim(); const id=editingId || `${slug(name)}-${Date.now().toString(36)}`;
       const added=await uploadImages([...$('pImages').files],id); const images=[...currentImages,...added];
-      const data={id,name,brand:$('pBrand').value.trim(),category:$('pCategory').value,price:Number($('pPrice').value),oldPrice:$('pOldPrice').value?Number($('pOldPrice').value):null,description:$('pDescription').value.trim(),images,specifications:parseSpecs($('pSpecs').value),availability:$('pAvailability').value,featured:$('pFeatured').checked,isNew:$('pNew').checked,isSale:$('pSale').checked};
+      const existing=products.find(x=>x.id===editingId)||{}; const nameKk=$('pNameKk').value.trim(), descKk=$('pDescriptionKk').value.trim();
+      const data={...existing,id,name,brand:$('pBrand').value.trim(),category:$('pCategory').value,price:Number($('pPrice').value),oldPrice:$('pOldPrice').value?Number($('pOldPrice').value):null,description:$('pDescription').value.trim(),images,specifications:parseSpecs($('pSpecs').value),availability:$('pAvailability').value,featured:$('pFeatured').checked,isNew:$('pNew').checked,isSale:$('pSale').checked,name_kk:nameKk||undefined,description_kk:descKk||undefined};
       const {error}=await db.from('products').upsert({id,data},{onConflict:'id'}); if(error)throw error;
       $('editPanel').classList.add('admin-hidden'); $('productForm').reset(); say('Товар сохранён. Каталог сайта обновится автоматически.'); await loadProducts();
     } catch(err){say('Не удалось сохранить: '+(err.message||String(err)),true);} finally {$('saveBtn').disabled=false;}

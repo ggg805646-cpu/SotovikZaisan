@@ -1,21 +1,25 @@
 (() => {
 "use strict";
 const C = window.CONFIG, P = window.PRODUCTS, CATS = window.CATEGORIES, SL = window.SPEC_LABELS;
+const I = window.I18N, T = I.t, KK = () => I.lang === "kk";
+const L = (o, k) => (KK() && o[k + "_kk"]) || o[k];   // название/описание на выбранном языке
+const cat = k => T(CATS[k]);
 const $ = (s, r = document) => r.querySelector(s);
 const ESC = {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"};
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ESC[c]);
 const money = n => n == null ? "" : n.toLocaleString("ru-RU").replace(/\u00a0/g, " ") + " ₸";
 const AV = {in_stock: "В наличии", order: "Под заказ", out: "Нет в наличии"};
+const av = a => T(AV[a] || "");
 const ICON = '<svg viewBox="0 0 48 48"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M21 38h6"/></svg>';
 
 // WhatsApp: единое место формирования ссылок (номер берётся из config.js)
 const waLink = text => C.whatsapp ? `https://wa.me/${C.whatsapp}?text=${encodeURIComponent(text)}` : "";
-const orderText = (p, ask) => `Здравствуйте! Меня интересует товар:\n\n${p.name}\n${p.price != null ? "Цена: " + money(p.price) + "\n" : ""}\n${ask ? "Подскажите, пожалуйста, есть ли он в наличии?" : "Хочу заказать. Подскажите, пожалуйста, наличие и условия получения."}`;
+const orderText = (p, ask) => `${T("Здравствуйте! Меня интересует товар:")}\n\n${L(p, "name")}\n${p.price != null ? T("Цена: ") + money(p.price) + "\n" : ""}\n${ask ? T("Подскажите, пожалуйста, есть ли он в наличии?") : T("Хочу заказать. Подскажите, пожалуйста, наличие и условия получения.")}`;
 function bindWA(root) {
   root.querySelectorAll("[data-wa]").forEach(a => {
-    const href = waLink(a.dataset.wa || "Здравствуйте! Хочу уточнить информацию.");
+    const href = waLink(a.dataset.wa || T("Здравствуйте! Хочу уточнить информацию."));
     if (href) { a.href = href; a.target = "_blank"; a.rel = "noopener"; }
-    else { a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.title = "Номер WhatsApp не задан"; }
+    else { a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.title = T("Номер WhatsApp не задан"); }
   });
 }
 const waBtn = (txt, cls = "btn pri", msg = "") => `<a class="${cls}" data-wa="${esc(msg)}">${txt}</a>`;
@@ -25,7 +29,7 @@ const imgSrc = (p, i) => (p.images && p.images[i]) || (i === 0 ? window.CAT_IMG[
 const imgTag = (p, i = 0, lazy = true) => {
   const src = imgSrc(p, i);
   if (!src) return placeholder();
-  return `<img class="${src.endsWith(".svg") ? "" : "photo"}" src="${esc(src)}" alt="${esc(p.name)}" ${lazy ? "loading=lazy" : ""} data-fallback>`;
+  return `<img class="${src.endsWith(".svg") ? "" : "photo"}" src="${esc(src)}" alt="${esc(L(p, "name"))}" ${lazy ? "loading=lazy" : ""} data-fallback>`;
 };
 document.addEventListener("error", e => {
   const t = e.target;
@@ -36,10 +40,10 @@ const priceHtml = p => {
   return `<div class="pr"><span>${money(p.price)}</span>${sale ? `<s>${money(p.oldPrice)}</s><span class="off">−${Math.round((1 - p.price / p.oldPrice) * 100)}%</span>` : ""}</div>`;
 };
 const card = p => {
-  const tag = p.isSale ? '<span class="tag sale">Акция</span>' : p.isNew ? '<span class="tag">Новинка</span>' : p.featured ? '<span class="tag">Популярное</span>' : "";
-  return `<a class="card" href="#/product/${esc(p.id)}"><div class="ph">${tag}${p.demo ? '<span class="tag demo">Демо</span>' : ""}${imgTag(p)}</div>
-  <div class="bd"><span class="br">${esc([p.brand, CATS[p.category]].filter(Boolean).join(" · "))}</span><span class="nm">${esc(p.name)}</span>${priceHtml(p)}
-  <span class="st ${esc(p.availability)}">${AV[p.availability] || ""}</span></div></a>`;
+  const tag = p.isSale ? `<span class="tag sale">${T("Акция")}</span>` : p.isNew ? `<span class="tag">${T("Новинка")}</span>` : p.featured ? `<span class="tag">${T("Популярное")}</span>` : "";
+  return `<a class="card" href="#/product/${esc(p.id)}"><div class="ph">${tag}${p.demo ? `<span class="tag demo">${T("Демо")}</span>` : ""}${imgTag(p)}</div>
+  <div class="bd"><span class="br">${esc([p.brand, cat(p.category)].filter(Boolean).join(" · "))}</span><span class="nm">${esc(L(p, "name"))}</span>${priceHtml(p)}
+  <span class="st ${esc(p.availability)}">${av(p.availability)}</span></div></a>`;
 };
 const cards = list => list.length ? `<div class="grid">${list.map(card).join("")}</div>` : "";
 const SUB = window.SUBCATS || {};
@@ -47,10 +51,10 @@ const parentOf = k => Object.keys(SUB).find(pk => SUB[pk].includes(k));
 const inCat = (p, k) => p.category === k || (SUB[k] || []).includes(p.category);
 const hasProducts = k => P.some(p => inCat(p, k));
 // верхний уровень разделов (без подразделов)
-const catList = () => Object.entries(CATS).filter(([k]) => !parentOf(k) && (C.showEmptyCategories || hasProducts(k)));
+const catList = () => Object.entries(CATS).filter(([k]) => !parentOf(k) && (C.showEmptyCategories || hasProducts(k))).map(([k, v]) => [k, T(v)]);
 const catImgCls = k => window.CAT_IMG[k].endsWith(".svg") ? "" : window.CAT_IMG[k].includes("/cat-") ? "photo blend" : "photo";
-const catTile = (k, label, cls = "") => `<a class="cat ${cls}" href="#/catalog?cat=${k}"><b>${label}</b>${hasProducts(k) ? "" : '<span class="soon">Скоро</span>'}<img class="${catImgCls(k)}" src="${window.CAT_IMG[k]}" alt="" loading="lazy"></a>`;
-const hoursHtml = () => C.hours.map(([d, t]) => `<div><span>${esc(d)}</span><b>${esc(t)}</b></div>`).join("");
+const catTile = (k, label, cls = "") => `<a class="cat ${cls}" href="#/catalog?cat=${k}"><b>${label}</b>${hasProducts(k) ? "" : '<span class="soon">${T("Скоро")}</span>'}<img class="${catImgCls(k)}" src="${window.CAT_IMG[k]}" alt="" loading="lazy"></a>`;
+const hoursHtml = () => C.hours.map(([d, t]) => `<div><span>${esc(T(d))}</span><b>${esc(T(t))}</b></div>`).join("");
 const handle = u => "@" + u.split("@")[1];
 const socials = () => [["Instagram", C.instagram], ...[].concat(C.tiktok || []).map(u => ["TikTok " + handle(u), u]), ["Telegram", C.telegram]].filter(s => s[1]);
 const mapUrl = () => C.mapLink || "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(C.plusCode + " Зайсан");
@@ -62,45 +66,45 @@ function setMeta(title, desc) {
 }
 
 const activeServices = () => C.showServices ? (C.services || []).filter(s => s.enabled !== false) : [];
-const servicesHtml = () => `<div class="svc">${activeServices().map(s => `<div><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join("")}</div>`;
+const servicesHtml = () => `<div class="svc">${activeServices().map(s => `<div><h3>${esc(L(s, "title"))}</h3><p>${esc(L(s, "text"))}</p></div>`).join("")}</div>`;
 
 /* ---------- pages ---------- */
 function home() {
-  setMeta("Sotovik Zaisan — электроника, ремонт и аксессуары в Зайсане", "Аксессуары, наушники, зарядные устройства, ремонт телефонов и электроники в Зайсане. Каталог и заказ через WhatsApp.");
+  setMeta(T("Sotovik Zaisan — электроника, ремонт и аксессуары в Зайсане"), T("Аксессуары, наушники, зарядные устройства, ремонт телефонов и электроники в Зайсане. Каталог и заказ через WhatsApp."));
   const pop = P.filter(p => p.featured).slice(0, 8), nw = P.filter(p => p.isNew), sale = P.filter(p => p.isSale);
-  const sec = (t, l, href, max = 4) => l.length ? `<section class="sec"><div class="wrap"><div class="sec-h"><h2>${t}</h2><a class="link" href="${href}">Все товары</a></div>${cards(l.slice(0, max))}</div></section>` : "";
-  const tile = (cls, t, txt, href, img) => `<a class="tile ${cls}" href="${href}"><h2>${t}</h2><p>${txt}</p><span class="btn wh sm">Смотреть</span><img src="${img}" alt="" loading="lazy"></a>`;
+  const sec = (t, l, href, max = 4) => l.length ? `<section class="sec"><div class="wrap"><div class="sec-h"><h2>${t}</h2><a class="link" href="${href}">${T("Все товары")}</a></div>${cards(l.slice(0, max))}</div></section>` : "";
+  const tile = (cls, t, txt, href, img) => `<a class="tile ${cls}" href="${href}"><h2>${t}</h2><p>${txt}</p><span class="btn wh sm">${T("Смотреть")}</span><img src="${img}" alt="" loading="lazy"></a>`;
   const svc = activeServices();
-  return `<div class="wrap hero"><div class="hero-box"><div><h1>Техника под рукой</h1>
-  <p>Аксессуары, наушники и зарядные устройства. Ремонт и настройка устройств. Наличие уточним заранее в WhatsApp.</p>
-  <div class="cta"><a class="btn pri" href="#/catalog">Смотреть каталог</a>${waBtn("Связаться с нами", "btn")}</div></div>
-  <div class="hero-art"><img class="a" src="${esc(C.heroImageBack || C.heroImage)}" alt=""><img class="b" src="${esc(C.heroImage)}" alt="Смартфон"></div></div></div>
-  <section class="sec"><div class="wrap"><div class="sec-h"><h2>Категории</h2></div><div class="cats" data-n="${catList().length}">${catList().map(([k, v]) => catTile(k, v)).join("")}</div></div></section>
-  ${sec("Популярные товары", pop, "#/catalog", 8)}
-  ${nw.length || sale.length ? `<section class="sec"><div class="wrap promo">${nw.length ? tile("n", "Новые поступления", "Свежие товары в каталоге.", "#/catalog?flag=new", imgSrc(nw[0], 0)) : ""}${sale.length ? tile("s", "Акции", "Товары со сниженной ценой.", "#/catalog?flag=sale", imgSrc(sale[0], 0)) : ""}</div></section>` : ""}
-  ${svc.length ? `<section class="sec"><div class="wrap"><div class="svcband"><div class="sec-h" style="margin:0"><h2>Сервис и услуги</h2><a class="btn ln sm" href="#/services">Подробнее</a></div>${servicesHtml()}</div></div></section>` : ""}
-  <div class="wrap"><div class="final"><h2>Ищете что-то конкретное?</h2><p>Свяжитесь с нами — поможем узнать наличие и подобрать подходящий товар.</p>${waBtn("Написать в WhatsApp")}</div></div>`;
+  return `<div class="wrap hero"><div class="hero-box"><div><h1>${T("Техника под рукой")}</h1>
+  <p>${T("Аксессуары, наушники и зарядные устройства. Ремонт и настройка устройств. Наличие уточним заранее в WhatsApp.")}</p>
+  <div class="cta"><a class="btn pri" href="#/catalog">${T("Смотреть каталог")}</a>${waBtn(T("Связаться с нами"), "btn")}</div></div>
+  <div class="hero-art"><img class="a" src="${esc(C.heroImageBack || C.heroImage)}" alt=""><img class="b" src="${esc(C.heroImage)}" alt="${T("Смартфон")}"></div></div></div>
+  <section class="sec"><div class="wrap"><div class="sec-h"><h2>${T("Категории")}</h2></div><div class="cats" data-n="${catList().length}">${catList().map(([k, v]) => catTile(k, v)).join("")}</div></div></section>
+  ${sec(T("Популярные товары"), pop, "#/catalog", 8)}
+  ${nw.length || sale.length ? `<section class="sec"><div class="wrap promo">${nw.length ? tile("n", T("Новые поступления"), T("Свежие товары в каталоге."), "#/catalog?flag=new", imgSrc(nw[0], 0)) : ""}${sale.length ? tile("s", T("Акции"), T("Товары со сниженной ценой."), "#/catalog?flag=sale", imgSrc(sale[0], 0)) : ""}</div></section>` : ""}
+  ${svc.length ? `<section class="sec"><div class="wrap"><div class="svcband"><div class="sec-h" style="margin:0"><h2>${T("Сервис и услуги")}</h2><a class="btn ln sm" href="#/services">${T("Подробнее")}</a></div>${servicesHtml()}</div></div></section>` : ""}
+  <div class="wrap"><div class="final"><h2>${T("Ищете что-то конкретное?")}</h2><p>${T("Свяжитесь с нами — поможем узнать наличие и подобрать подходящий товар.")}</p>${waBtn(T("Написать в WhatsApp"))}</div></div>`;
 }
 
 function catalog(q) {
-  setMeta("Каталог — Sotovik Zaisan", "Каталог товаров Sotovik Zaisan: аксессуары, наушники, зарядные устройства. Уточните наличие через WhatsApp.");
+  setMeta(T("Каталог — Sotovik Zaisan"), T("Каталог товаров Sotovik Zaisan: аксессуары, наушники, зарядные устройства. Уточните наличие через WhatsApp."));
   const st = {cat: q.get("cat") || "", q: q.get("q") || "", flag: q.get("flag") || "", stock: false, sort: "new"};
   setTimeout(() => {
     const draw = () => {
       const par = SUB[st.cat] ? st.cat : parentOf(st.cat);
-      $("#chips").innerHTML = [["", "Все"], ...catList()].map(([k, v]) => `<button class="chip ${st.cat === k || par === k ? "on" : ""}" data-c="${k}">${v}</button>`).join("");
-      $("#subchips").innerHTML = par ? [[par, "Все " + CATS[par].toLowerCase()], ...SUB[par].map(k => [k, window.SUB_LABELS[k] || CATS[k]])].map(([k, v]) => `<button class="chip sm ${st.cat === k ? "on" : ""}" data-c="${k}">${v}</button>`).join("") : "";
-      $("#subs").innerHTML = SUB[st.cat] ? `<div class="cats sub">${SUB[st.cat].map(k => catTile(k, CATS[k], "sm")).join("")}</div>` : ""; reveal($("#subs"));
+      $("#chips").innerHTML = [["", T("Все")], ...catList()].map(([k, v]) => `<button class="chip ${st.cat === k || par === k ? "on" : ""}" data-c="${k}">${v}</button>`).join("");
+      $("#subchips").innerHTML = par ? [[par, KK() ? T("Все") : "Все " + CATS[par].toLowerCase()], ...SUB[par].map(k => [k, T(window.SUB_LABELS[k] || CATS[k])])].map(([k, v]) => `<button class="chip sm ${st.cat === k ? "on" : ""}" data-c="${k}">${v}</button>`).join("") : "";
+      $("#subs").innerHTML = SUB[st.cat] ? `<div class="cats sub">${SUB[st.cat].map(k => catTile(k, cat(k), "sm")).join("")}</div>` : ""; reveal($("#subs"));
       const t = st.q.trim().toLowerCase();
       const l = P.filter(p => (!st.cat || inCat(p, st.cat)) && (!st.stock || p.availability === "in_stock") &&
         (!st.flag || (st.flag === "sale" ? p.isSale : p.isNew)) &&
-        (!t || [p.name, p.brand, CATS[p.category]].join(" ").toLowerCase().includes(t)));
+        (!t || [p.name, p.name_kk, p.brand, CATS[p.category], cat(p.category)].join(" ").toLowerCase().includes(t)));
       const idx = p => P.indexOf(p);
-      l.sort(st.sort === "pa" ? (a, b) => a.price - b.price : st.sort === "pd" ? (a, b) => b.price - a.price : st.sort === "n" ? (a, b) => a.name.localeCompare(b.name, "ru") : (a, b) => (b.isNew - a.isNew) || idx(a) - idx(b));
-      $("#cnt").textContent = `Найдено товаров: ${l.length}`;
+      l.sort(st.sort === "pa" ? (a, b) => a.price - b.price : st.sort === "pd" ? (a, b) => b.price - a.price : st.sort === "n" ? (a, b) => L(a, "name").localeCompare(L(b, "name"), KK() ? "kk" : "ru") : (a, b) => (b.isNew - a.isNew) || idx(a) - idx(b));
+      $("#cnt").textContent = T("Найдено товаров: ") + l.length;
       const emptyCat = !l.length && st.cat && !hasProducts(st.cat) && !t && !st.stock && !st.flag;
-      const hd = $("#ph"); if (hd && !st.flag) hd.textContent = st.cat ? CATS[st.cat] : "Каталог";
-      $("#res").innerHTML = l.length ? cards(l) : emptyCat ? `<div class="empty"><h3>Раздел скоро пополнится</h3><p>Товаров здесь пока нет. Напишите нам — подскажем, что есть в наличии.</p>${waBtn("Спросить в WhatsApp", "btn pri", `Здравствуйте! Интересует раздел «${CATS[st.cat]}». Подскажите, пожалуйста, что есть в наличии?`)}</div>` : '<div class="empty"><h3>По вашему запросу ничего не найдено</h3><p>Попробуйте изменить запрос или фильтры.</p><button class="btn" id="reset">Сбросить фильтры</button></div>';
+      const hd = $("#ph"); if (hd && !st.flag) hd.textContent = st.cat ? cat(st.cat) : T("Каталог");
+      $("#res").innerHTML = l.length ? cards(l) : emptyCat ? `<div class="empty"><h3>${T("Раздел скоро пополнится")}</h3><p>${T("Товаров здесь пока нет. Напишите нам — подскажем, что есть в наличии.")}</p>${waBtn(T("Спросить в WhatsApp"), "btn pri", T("Здравствуйте! Интересует раздел «") + cat(st.cat) + T("». Подскажите, пожалуйста, что есть в наличии?"))}</div>` : '<div class="empty"><h3>${T("По вашему запросу ничего не найдено")}</h3><p>${T("Попробуйте изменить запрос или фильтры.")}</p><button class="btn" id="reset">${T("Сбросить фильтры")}</button></div>';
       bindWA($("#res")); reveal($("#res"));
       const r = $("#reset"); if (r) r.onclick = () => { Object.assign(st, {cat: "", q: "", flag: "", stock: false}); $("#q").value = ""; $("#stock").checked = false; draw(); };
     };
@@ -111,25 +115,25 @@ function catalog(q) {
     $("#chips").onclick = pick; $("#subchips").onclick = pick;
     draw(); if (q.get("focus")) $("#q").focus();
   });
-  return `<div class="wrap"><h1 id="ph" class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${st.flag === "sale" ? "Акции" : st.flag === "new" ? "Новинки" : "Каталог"}</h1>
-  <div class="bar"><input class="in q" id="q" type="search" placeholder="Поиск по названию, бренду, категории" aria-label="Поиск" value="${esc(st.q)}">
-  <select class="in" id="sort" aria-label="Сортировка"><option value="new">Сначала новые</option><option value="pa">Цена: по возрастанию</option><option value="pd">Цена: по убыванию</option><option value="n">По названию</option></select>
-  <label class="in" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="stock"> Только в наличии</label></div>
+  return `<div class="wrap"><h1 id="ph" class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${T(st.flag === "sale" ? "Акции" : st.flag === "new" ? "Новинки" : "Каталог")}</h1>
+  <div class="bar"><input class="in q" id="q" type="search" placeholder="${T("Поиск по названию, бренду, категории")}" aria-label="${T("Поиск")}" value="${esc(st.q)}">
+  <select class="in" id="sort" aria-label="${T("Сортировка")}"><option value="new">${T("Сначала новые")}</option><option value="pa">${T("Цена: по возрастанию")}</option><option value="pd">${T("Цена: по убыванию")}</option><option value="n">${T("По названию")}</option></select>
+  <label class="in" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="stock"> ${T("Только в наличии")}</label></div>
   <div class="chips" id="chips"></div><div class="chips" id="subchips"></div><div id="subs"></div><p class="mu" id="cnt" aria-live="polite"></p><div id="res"></div></div>`;
 }
 
 function product(id) {
   const p = P.find(x => x.id === id);
-  if (!p) { setMeta("Товар не найден — Sotovik Zaisan"); return '<div class="wrap empty"><h1>Товар не найден</h1><p>Возможно, он удалён из каталога.</p><a class="btn pri" href="#/catalog">В каталог</a></div>'; }
-  setMeta(`${p.name} — Sotovik Zaisan`, p.description);
+  if (!p) { setMeta(T("Товар не найден — Sotovik Zaisan")); return `<div class="wrap empty"><h1>${T("Товар не найден")}</h1><p>${T("Возможно, он удалён из каталога.")}</p><a class="btn pri" href="#/catalog">${T("В каталог")}</a></div>`; }
+  setMeta(`${L(p, "name")} — Sotovik Zaisan`, L(p, "description"));
   const rel = P.filter(x => x.category === p.category && x.id !== p.id).slice(0, 4);
-  const specs = Object.entries(p.specifications || {}).filter(([, v]) => v).map(([k, v]) => `<div><span>${esc(SL[k] || k)}</span><b>${esc(v)}</b></div>`).join("");
+  const specs = Object.entries(p.specifications || {}).filter(([, v]) => v).map(([k, v]) => `<div><span>${esc(T(SL[k] || k))}</span><b>${esc(T(v))}</b></div>`).join("");
   const imgN = Math.max(1, (p.images || []).length), n = imgN + (p.video ? 1 : 0);
   const slides = Array.from({length: imgN}, (_, i) => `<div class="slide">${imgTag(p, i, i > 0)}</div>`).join("")
     + (p.video ? `<div class="slide vid"><video src="${esc(p.video)}" ${p.videoPoster ? `poster="${esc(p.videoPoster)}"` : ""} controls playsinline preload="none"></video></div>` : "");
   const thumbs = Array.from({length: n}, (_, i) => i < imgN
-    ? `<button data-i="${i}" aria-label="Фото ${i + 1}" aria-current="${i === 0}">${imgTag(p, i)}</button>`
-    : `<button data-i="${i}" class="vt" aria-label="Видео" aria-current="false">${p.videoPoster ? `<img class="photo" src="${esc(p.videoPoster)}" alt="" loading="lazy">` : ""}<i>▶</i></button>`).join("");
+    ? `<button data-i="${i}" aria-label="${T("Фото ")}${i + 1}" aria-current="${i === 0}">${imgTag(p, i)}</button>`
+    : `<button data-i="${i}" class="vt" aria-label="${T("Видео")}" aria-current="false">${p.videoPoster ? `<img class="photo" src="${esc(p.videoPoster)}" alt="" loading="lazy">` : ""}<i>▶</i></button>`).join("");
   setTimeout(() => {
     const tr = $(".gal .track"); if (!tr) return;
     const bs = [...document.querySelectorAll(".thumbs button")];
@@ -148,41 +152,54 @@ function product(id) {
     }, 60); }, {passive: true});
     if (prev) prev.hidden = true;
   });
-  return `<div class="wrap"><div class="crumb"><a href="#/catalog">Каталог</a> / <a href="#/catalog?cat=${esc(p.category)}">${esc(CATS[p.category])}</a></div>
-  <div class="pd"><div class="gal"><div class="main"><div class="track">${slides}</div>${n > 1 ? '<button class="nav pv" aria-label="Назад">‹</button><button class="nav nx" aria-label="Далее">›</button>' : ""}</div>${n > 1 ? `<div class="thumbs">${thumbs}</div>` : ""}</div>
-  <div class="info"><span class="mu">${esc([p.brand, CATS[p.category]].filter(Boolean).join(" · "))}${p.demo ? " · демонстрационный товар" : ""}</span><h1>${esc(p.name)}</h1><p class="mu desc">${esc(p.description)}</p>
-  <div class="buy">${priceHtml(p)}<span class="st ${esc(p.availability)}">${AV[p.availability]}</span>
-  <div class="cta">${waBtn("Заказать в WhatsApp", "btn pri", orderText(p, false))}${waBtn("Уточнить наличие", "btn", orderText(p, true))}</div>
-  <p class="note">Заказ не оформлен, пока магазин не подтвердит наличие и условия в WhatsApp. Самовывоз: ${esc(C.address)}.</p></div>
+  return `<div class="wrap"><div class="crumb"><a href="#/catalog">${T("Каталог")}</a> / <a href="#/catalog?cat=${esc(p.category)}">${esc(cat(p.category))}</a></div>
+  <div class="pd"><div class="gal"><div class="main"><div class="track">${slides}</div>${n > 1 ? `<button class="nav pv" aria-label="${T("Назад")}">‹</button><button class="nav nx" aria-label="${T("Далее")}">›</button>` : ""}</div>${n > 1 ? `<div class="thumbs">${thumbs}</div>` : ""}</div>
+  <div class="info"><span class="mu">${esc([p.brand, cat(p.category)].filter(Boolean).join(" · "))}${p.demo ? T(" · демонстрационный товар") : ""}</span><h1>${esc(L(p, "name"))}</h1><p class="mu desc">${esc(L(p, "description"))}</p>
+  <div class="buy">${priceHtml(p)}<span class="st ${esc(p.availability)}">${av(p.availability)}</span>
+  <div class="cta">${waBtn(T("Заказать в WhatsApp"), "btn pri", orderText(p, false))}${waBtn(T("Уточнить наличие"), "btn", orderText(p, true))}</div>
+  <p class="note">${T("Заказ не оформлен, пока магазин не подтвердит наличие и условия в WhatsApp. Самовывоз: ")}${esc(T(C.address).replace(/\.$/, ""))}.</p></div>
   ${specs ? `<div class="specs">${specs}</div>` : ""}</div></div>
-  ${rel.length ? `<section class="sec" style="padding-top:56px"><h2 style="margin-bottom:28px">Похожие товары</h2>${cards(rel)}</section>` : ""}</div>`;
+  ${rel.length ? `<section class="sec" style="padding-top:56px"><h2 style="margin-bottom:28px">${T("Похожие товары")}</h2>${cards(rel)}</section>` : ""}</div>`;
 }
 
 function services() {
-  setMeta("Услуги и о магазине — Sotovik Zaisan", "Ремонт смартфонов и электроники, перепрошивка, SIM и E-Sim в Зайсане.");
+  setMeta(T("Услуги и о магазине — Sotovik Zaisan"), T("Ремонт смартфонов и электроники, перепрошивка, SIM и E-Sim в Зайсане."));
   const svc = activeServices();
-  return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">О магазине${svc.length ? " и услуги" : ""}</h1>
-  <p class="mu" style="max-width:36em;font-size:1.15rem;margin:16px 0 0">Sotovik Zaisan — магазин электроники в Зайсане. Продаём аксессуары и технику (почти всё, кроме чехлов).</p>
+  return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${T("О магазине" + (svc.length ? " и услуги" : ""))}</h1>
+  <p class="mu" style="max-width:36em;font-size:1.15rem;margin:16px 0 0">${T("Sotovik Zaisan — магазин электроники в Зайсане. Продаём аксессуары и технику (почти всё, кроме чехлов).")}</p>
   ${svc.length ? `<div class="sec" style="padding-top:40px"><div class="svcband">${servicesHtml()}</div></div>` : ""}
-  <div class="final"><h2>Нужна консультация?</h2><p>Опишите модель и задачу — подскажем по срокам и стоимости. Цены уточняйте у магазина.</p>${waBtn("Написать в WhatsApp", "btn pri", "Здравствуйте! Хочу узнать про услугу или товар.")}</div></div>`;
+  <div class="final"><h2>${T("Нужна консультация?")}</h2><p>${T("Опишите модель и задачу — подскажем по срокам и стоимости. Цены уточняйте у магазина.")}</p>${waBtn(T("Написать в WhatsApp"), "btn pri", T("Здравствуйте! Хочу узнать про услугу или товар."))}</div></div>`;
 }
 
 function contacts() {
-  setMeta("Контакты — Sotovik Zaisan", "Адрес, телефон, WhatsApp и график работы магазина Sotovik Zaisan в Зайсане.");
-  return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">Контакты</h1><div class="two"><div class="dl">
-  <div><span class="mu">Адрес</span><b>${esc(C.address)}<br>${esc(C.plusCode)}</b></div>
-  <div><span class="mu">Телефон</span><b><a href="tel:${esc(C.phoneTel)}">${esc(C.phoneDisplay)}</a></b></div>
-  ${socials().map(s => `<div><span class="mu">${s[0]}</span><b><a href="${esc(s[1])}" target="_blank" rel="noopener">Открыть</a></b></div>`).join("")}
-  <div style="display:block"><span class="mu">График работы</span><div class="dl" style="margin-top:6px">${hoursHtml()}</div></div></div>
-  <div><div class="cta">${waBtn("Написать в WhatsApp")}<a class="btn" href="${routeUrl()}" target="_blank" rel="noopener">Построить маршрут</a></div>
-  <p><a href="${mapUrl()}" target="_blank" rel="noopener" style="color:var(--ac);font-weight:600">Открыть на карте</a></p></div></div></div>`;
+  setMeta(T("Контакты — Sotovik Zaisan"), T("Адрес, телефон, WhatsApp и график работы магазина Sotovik Zaisan в Зайсане."));
+  return `<div class="wrap"><h1 class="page-h" style="font-size:clamp(2.2rem,5vw,3.6rem)">${T("Контакты")}</h1><div class="two"><div class="dl">
+  <div><span class="mu">${T("Адрес")}</span><b>${esc(T(C.address))}<br>${esc(C.plusCode)}</b></div>
+  <div><span class="mu">${T("Телефон")}</span><b><a href="tel:${esc(C.phoneTel)}">${esc(C.phoneDisplay)}</a></b></div>
+  ${socials().map(s => `<div><span class="mu">${s[0]}</span><b><a href="${esc(s[1])}" target="_blank" rel="noopener">${T("Открыть")}</a></b></div>`).join("")}
+  <div style="display:block"><span class="mu">${T("График работы")}</span><div class="dl" style="margin-top:6px">${hoursHtml()}</div></div></div>
+  <div><div class="cta">${waBtn(T("Написать в WhatsApp"))}<a class="btn" href="${routeUrl()}" target="_blank" rel="noopener">${T("Построить маршрут")}</a></div>
+  <p><a href="${mapUrl()}" target="_blank" rel="noopener" style="color:var(--ac);font-weight:600">${T("Открыть на карте")}</a></p></div></div></div>`;
 }
 
+// строки подвала в виде кнопок: значок, текст, стрелка — сразу видно, что это можно нажать
+const FI = {
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  wa: '<path d="M4 20l1.3-4.2A8 8 0 1 1 8.4 19z"/><path d="M9 9.5c.5 2 2.5 4 4.5 4.5l1.2-1.2-1.7-1-.8.6a4 4 0 0 1-1.8-1.8l.6-.8-1-1.7z"/>',
+  ig: '<rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="16.8" cy="7.2" r=".6"/>',
+  tt: '<path d="M14 4v10.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 4c.4 2.2 1.9 3.6 4 3.8"/>',
+  tg: '<path d="M21 4 3 11l5.5 2L10 19l3-3.5 4.5 3.3z"/><path d="m8.5 13 8-6"/>',
+  pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'
+};
+const ficon = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${FI[n]}</svg>`;
+const fl = (icon, text, attrs, cls = "") => `<a class="fl ${cls}" ${attrs}><i>${ficon(icon)}</i><span>${text}</span><b aria-hidden="true">›</b></a>`;
+const socIcon = n => /instagram/i.test(n) ? "ig" : /tiktok/i.test(n) ? "tt" : "tg";
 function footer() {
-  $("#footer").innerHTML = `<div class="fg"><div><b>SOTOVIK ZAISAN</b><p style="margin-top:8px">Магазин электроники и сервисный центр в Зайсане.</p></div>
-  <div><h3>Разделы</h3><a href="#/catalog">Каталог</a><a href="#/services">О магазине</a><a href="#/contacts">Контакты</a></div>
-  <div><h3>Категории</h3>${catList().slice(0, 6).map(([k, v]) => `<a href="#/catalog?cat=${k}">${v}</a>`).join("")}</div>
-  <div><h3>Контакты</h3><a href="tel:${esc(C.phoneTel)}">${esc(C.phoneDisplay)}</a><a data-wa>WhatsApp</a>${socials().map(s => `<a href="${esc(s[1])}" target="_blank" rel="noopener">${s[0]}</a>`).join("")}<p>${esc(C.address)}</p><p>${C.hours.map(h => h.join(" ")).join(", ")}</p></div></div>
+  $("#footer").innerHTML = `<div class="fg"><div><b>SOTOVIK ZAISAN</b><p style="margin-top:8px">${T("Магазин электроники и сервисный центр в Зайсане.")}</p></div>
+  <div><h3>${T("Разделы")}</h3><a href="#/catalog">${T("Каталог")}</a><a href="#/services">${T("О магазине")}</a><a href="#/contacts">${T("Контакты")}</a></div>
+  <div><h3>${T("Категории")}</h3>${catList().slice(0, 6).map(([k, v]) => `<a href="#/catalog?cat=${k}">${v}</a>`).join("")}</div>
+  <div class="fc"><h3>${T("Контакты")}</h3>${fl("phone", esc(C.phoneDisplay), `href="tel:${esc(C.phoneTel)}"`)}${fl("wa", "WhatsApp", "data-wa", "wa")}${socials().map(s => fl(socIcon(s[0]), s[0], `href="${esc(s[1])}" target="_blank" rel="noopener"`)).join("")}${fl("pin", esc(T(C.address)), `href="${mapUrl()}" target="_blank" rel="noopener"`)}<div class="fl-info"><i>${ficon("clock")}</i><span>${C.hours.map(h => h.map(x => T(x)).join(" ")).join(", ")}</span></div></div></div>
   <div class="copy">© ${new Date().getFullYear()} ${esc(C.name)}</div>`;
 }
 
@@ -223,5 +240,13 @@ function route() {
 }
 $("#burger").onclick = () => { const o = $("#nav").classList.toggle("show"); $("#burger").setAttribute("aria-expanded", String(o)); };
 if (!activeServices().length) { const n = $("#nav [data-r=services]"); n.textContent = "О магазине"; }
-footer(); bindWA(document); window.addEventListener("hashchange", route); route();
+function applyStatic() {
+  document.documentElement.lang = I.lang;
+  document.querySelectorAll("[data-t]").forEach(e => { e.textContent = T(e.dataset.t); });
+  document.querySelectorAll("[data-ta]").forEach(e => e.setAttribute("aria-label", T(e.dataset.ta)));
+  const lb = $("#lang"); if (lb) { lb.textContent = KK() ? "РУС" : "ҚАЗ"; lb.setAttribute("aria-label", KK() ? "Русский язык" : "Қазақ тілі"); }
+}
+const lb = $("#lang");
+if (lb) lb.onclick = () => { const y = window.scrollY; I.setLang(KK() ? "ru" : "kk"); applyStatic(); footer(); bindWA(document); route(); window.scrollTo(0, y); };
+applyStatic(); footer(); bindWA(document); window.addEventListener("hashchange", route); route();
 })();
